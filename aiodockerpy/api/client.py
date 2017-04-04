@@ -92,8 +92,7 @@ class APIClient(
         else:
             if tls is not False:
                 raise NotImplementedError("Custom TLSConfig not implemented")
-            connector = aiohttp.TCPConnector(
-                base_url, limit=num_pools, loop=loop)
+            connector = aiohttp.TCPConnector(limit=num_pools, loop=loop)
             self.base_url = base_url
 
         super(APIClient, self).__init__(
