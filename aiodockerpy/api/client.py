@@ -1,6 +1,7 @@
 import aiohttp
 from docker import auth
 import docker.client
+from docker.tls import TLSConfig
 from docker.utils import update_headers, utils
 from docker.constants import (
     DEFAULT_TIMEOUT_SECONDS, DEFAULT_USER_AGENT, IS_WINDOWS_PLATFORM,
@@ -9,6 +10,7 @@ from docker.constants import (
 )
 from functools import partial
 import io
+import ssl
 import struct
 import warnings
 
@@ -90,9 +92,19 @@ class APIClient(
         elif base_url.startswith('npipe://'):
             raise NotImplementedError("npipe:// connection not implemented")
         else:
-            if tls is not False:
-                raise NotImplementedError("Custom TLSConfig not implemented")
-            connector = aiohttp.TCPConnector(limit=num_pools, loop=loop)
+            if not isinstance(tls, TLSConfig):
+                connector = aiohttp.TCPConnector(limit=num_pools, loop=loop)
+            else:
+                if not tls.verify:
+                    connector = aiohttp.TCPConnector(
+                        limit=num_pools, loop=loop, verify_ssl=False)
+                else:
+                    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+                    ssl_context.load_verify_locations(cafile=tls.ca_cert)
+                    ssl_context.load_cert_chain(tls.cert[0],
+                                                keyfile=tls.cert[1])
+                    connector = aiohttp.TCPConnector(
+                        limit=num_pools, loop=loop, ssl_context=ssl_context)
             self.base_url = base_url
 
         super(APIClient, self).__init__(
