@@ -26,14 +26,15 @@ async def create_api_error_from_http_exception(e, response):
     raise cls(e, response=response, explanation=explanation)
 
 
-class APIError(aiohttp.http.HttpProcessingError, DockerException):
+class APIError(aiohttp.client_exceptions.ClientResponseError, DockerException):
     """
     An HTTP error from the API.
     """
     def __init__(self, e, response=None, explanation=None):
         # requests 1.2 supports response as a keyword argument, but
         # requests 1.1 doesn't
-        super(APIError, self).__init__(code=e.code, message=e.message)
+        super(APIError, self).__init__(code=e.code, message=e.message,
+                                       headers=e.headers)
         self.response = response
         self.explanation = explanation
 
