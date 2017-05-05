@@ -207,7 +207,7 @@ class APIClient(
     async def _raise_for_status_aiodockerpy(self, response):
         try:
             response.raise_for_status()
-        except aiohttp.HttpProcessingError as e:
+        except aiohttp.client.ClientResponseError as e:
             raise await create_api_error_from_http_exception(e, response)
 
     async def _result(self, async_response, json=False, binary=False):

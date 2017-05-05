@@ -13,7 +13,7 @@ async def create_api_error_from_http_exception(e, response):
         return
     try:
         explanation = (await response.json())['message']
-    except ValueError:
+    except aiohttp.client.ClientResponseError:
         explanation = (await response.text()).strip()
     cls = APIError
     if response.status == 404:
