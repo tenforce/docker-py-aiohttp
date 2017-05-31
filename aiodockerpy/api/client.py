@@ -22,6 +22,9 @@ from ..utils.json_stream import json_stream
 
 import six
 
+# Network
+from ..utils import check_resource, minimum_version
+
 
 class APIClient(
         aiohttp.ClientSession,
@@ -162,23 +165,17 @@ class APIClient(
                 if v is not None
             }
 
-    def post(self, *args, **kwargs):
-        raise RuntimeError("TODO")
-
     def get(self, url, params=None, stream=None, timeout=None):
         if stream:
-            return super(APIClient, self)\
-                .get(url, params=self._clean_params(params), timeout=None)
-        else:
-            return super(APIClient, self)\
-                .get(url, params=self._clean_params(params),
-                     timeout=self.timeout)
+            timeout = None
+        return super(APIClient, self)\
+            .get(url, params=self._clean_params(params), timeout=timeout)
 
     def put(self, *args, **kwargs):
         raise RuntimeError("TODO")
 
-    def delete(self, *args, **kwargs):
-        raise RuntimeError("TODO")
+    def delete(self, url, timeout=None):
+        return super(APIClient, self).delete(url, timeout=self.timeout)
 
     def _set_request_timeout(self, kwargs):
         """Prepare the kwargs for an HTTP request by inserting the timeout
@@ -189,6 +186,10 @@ class APIClient(
     @update_headers
     def _post(self, url, **kwargs):
         return self.post(url, **self._set_request_timeout(kwargs))
+
+    @update_headers
+    def _post_json(self, url, data=None, **kwargs):
+        return self.post(url, json=data, **self._set_request_timeout(kwargs))
 
     @update_headers
     def _get(self, url, **kwargs):
@@ -296,3 +297,55 @@ class APIClient(
                 x
                 async for x in self._multiplexed_buffer_helper(async_response)
             ])
+
+    # network.py
+
+    @minimum_version('1.21')
+    async def remove_network(self, net_id):
+        """
+        Remove a network. Similar to the ``docker network rm`` command.
+
+        Args:
+            net_id (str): The network's id
+        """
+        url = self._url("/networks/{0}", net_id)
+        async with self._delete(url) as res:
+            await self._raise_for_status_aiodockerpy(res)
+
+    @check_resource
+    @minimum_version('1.21')
+    async def connect_container_to_network(self, container, net_id,
+                                           ipv4_address=None,
+                                           ipv6_address=None,
+                                           aliases=None, links=None,
+                                           link_local_ips=None):
+        """
+        Connect a container to a network.
+
+        Args:
+            container (str): container-id/name to be connected to the network
+            net_id (str): network id
+            aliases (:py:class:`list`): A list of aliases for this endpoint.
+                Names in that list can be used within the network to reach the
+                container. Defaults to ``None``.
+            links (:py:class:`list`): A list of links for this endpoint.
+                Containers declared in this list will be linked to this
+                container. Defaults to ``None``.
+            ipv4_address (str): The IP address of this container on the
+                network, using the IPv4 protocol. Defaults to ``None``.
+            ipv6_address (str): The IP address of this container on the
+                network, using the IPv6 protocol. Defaults to ``None``.
+            link_local_ips (:py:class:`list`): A list of link-local
+            (IPv4/IPv6) addresses.
+        """
+        data = {
+            "Container": container,
+            "EndpointConfig": self.create_endpoint_config(
+                aliases=aliases, links=links, ipv4_address=ipv4_address,
+                ipv6_address=ipv6_address, link_local_ips=link_local_ips
+            ),
+        }
+
+        url = self._url("/networks/{0}/connect", net_id)
+        async with self._post_json(url, data=data) as res:
+            await self._raise_for_status_aiodockerpy(res)

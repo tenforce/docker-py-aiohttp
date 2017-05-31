@@ -7,18 +7,14 @@ from setuptools import setup, find_packages
 ROOT_DIR = os.path.dirname(__file__)
 SOURCE_DIR = os.path.join(ROOT_DIR)
 
-requirements = [
-    'six >= 1.4.0',
-    'docker == 2.1.0',
-    'aiohttp == 2.0.1',
-]
-
 version = None
 exec(open('aiodockerpy/version.py').read())
 
+with open('./requirements.txt') as reqs_txt:
+    requirements = list(iter(reqs_txt))
+
 with open('./test-requirements.txt') as test_reqs_txt:
     test_requirements = [line for line in test_reqs_txt]
-
 
 setup(
     name="aiodockerpy",
