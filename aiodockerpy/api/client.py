@@ -298,6 +298,29 @@ class APIClient(
                 async for x in self._multiplexed_buffer_helper(async_response)
             ])
 
+    # container.py
+
+    @check_resource
+    async def restart(self, container, timeout=10):
+        """
+        Restart a container. Similar to the ``docker restart`` command.
+
+        Args:
+            container (str or dict): The container to restart. If a dict, the
+                ``Id`` key is used.
+            timeout (int): Number of seconds to try to stop for before killing
+                the container. Once killed it will then be restarted. Default
+                is 10 seconds.
+
+        Raises:
+            :py:class:`docker.errors.APIError`
+                If the server returns an error.
+        """
+        params = {'t': timeout}
+        url = self._url("/containers/{0}/restart", container)
+        async with self._post(url, params=params) as res:
+            self._raise_for_status_aiodockerpy(res)
+
     # network.py
 
     @minimum_version('1.21')
