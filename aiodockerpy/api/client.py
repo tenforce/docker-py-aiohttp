@@ -319,7 +319,7 @@ class APIClient(
         params = {'t': timeout}
         url = self._url("/containers/{0}/restart", container)
         async with self._post(url, params=params) as res:
-            self._raise_for_status_aiodockerpy(res)
+            await self._raise_for_status_aiodockerpy(res)
 
     # network.py
 
