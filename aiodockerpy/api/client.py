@@ -155,12 +155,21 @@ class APIClient(
         else:
             return '{0}{1}'.format(self.base_url, pathfmt.format(*args))
 
+    def _render_param(self, param):
+        if isinstance(param, bool):
+            return ("true" if param else "false")
+        elif isinstance(param, (str, int)):
+            return param
+        else:
+            raise NotImplementedError(
+                "Unknown param type %r: %r", type(param), param)
+
     def _clean_params(self, params):
         if params is None:
             return None
         else:
             return {
-                k: v
+                k: self._render_param(v)
                 for k, v in params.items()
                 if v is not None
             }
@@ -174,8 +183,10 @@ class APIClient(
     def put(self, *args, **kwargs):
         raise RuntimeError("TODO")
 
-    def delete(self, url, timeout=None):
-        return super(APIClient, self).delete(url, timeout=self.timeout)
+    def delete(self, url, params=None, timeout=None):
+        return super(APIClient, self)\
+            .delete(url, params=self._clean_params(params),
+                    timeout=self.timeout)
 
     def _set_request_timeout(self, kwargs):
         """Prepare the kwargs for an HTTP request by inserting the timeout
@@ -371,4 +382,21 @@ class APIClient(
 
         url = self._url("/networks/{0}/connect", net_id)
         async with self._post_json(url, data=data) as res:
+            await self._raise_for_status_aiodockerpy(res)
+
+    # image.py
+
+    @check_resource('image')
+    async def remove_image(self, image, force=False, noprune=False):
+        """
+        Remove an image. Similar to the ``docker rmi`` command.
+
+        Args:
+            image (str): The image to remove
+            force (bool): Force removal of the image
+            noprune (bool): Do not delete untagged parents
+        """
+        params = {'force': force, 'noprune': noprune}
+        async with self._delete(self._url("/images/{0}", image),
+                                params=params) as res:
             await self._raise_for_status_aiodockerpy(res)
