@@ -33,13 +33,13 @@ class APIError(aiohttp.client_exceptions.ClientResponseError, DockerException):
     def __init__(self, e, response=None, explanation=None):
         # requests 1.2 supports response as a keyword argument, but
         # requests 1.1 doesn't
-        super(APIError, self).__init__(code=e.code, message=e.message,
-                                       headers=e.headers)
+        super().__init__(e.request_info, e.history, code=e.code,
+                         message=e.message, headers=e.headers)
         self.response = response
         self.explanation = explanation
 
     def __str__(self):
-        message = super(APIError, self).__str__()
+        message = super().__str__()
 
         if self.is_client_error():
             message = '{0} Client Error: {1}'.format(
