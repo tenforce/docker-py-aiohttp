@@ -23,7 +23,7 @@ async def create_api_error_from_http_exception(e, response):
             cls = ImageNotFound
         else:
             cls = NotFound
-    raise cls(e, response=response, explanation=explanation)
+    return cls(e, response=response, explanation=explanation)
 
 
 class APIError(aiohttp.client_exceptions.ClientResponseError, DockerException):

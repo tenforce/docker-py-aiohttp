@@ -13,7 +13,7 @@ exec(open('aiodockerpy/version.py').read())
 with open('./requirements.txt') as reqs_txt:
     requirements = list(iter(reqs_txt))
 
-with open('./test-requirements.txt') as test_reqs_txt:
+with open('./requirements-test.txt') as test_reqs_txt:
     test_requirements = [line for line in test_reqs_txt]
 
 setup(
