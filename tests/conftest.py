@@ -1,5 +1,5 @@
 import uuid
-from aiodockerpy import APIClient
+from aiodockerpy import APIClient, DockerClient
 from aiodockerpy.errors import ImageNotFound
 
 import pytest
@@ -39,3 +39,10 @@ async def tmp_image(api_client, tmp_container):
         await api_client.remove_image(image, force=True)
     except ImageNotFound:
         pass
+
+
+@pytest.yield_fixture
+async def client():
+    client = DockerClient()
+    yield client
+    await client.close()
