@@ -41,11 +41,27 @@ async def _pull_base_images():
         await api_client.close()
 
 
-@pytest.yield_fixture
-async def api_client():
+@pytest.yield_fixture(scope="session")
+def api_client_kwargs():
     kwargs = kwargs_from_env()
     kwargs['version'] = _api_versions.get(ENV.get("DOCKER_VERSION"))
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(_ensure_api_version(kwargs))
+    yield kwargs
+
+
+async def _ensure_api_version(kwargs):
     api_client = APIClient(**kwargs)
+    try:
+        resp = await api_client.version()
+        assert resp["ApiVersion"] == api_client.api_version
+    finally:
+        await api_client.close()
+
+
+@pytest.yield_fixture
+async def api_client(api_client_kwargs):
+    api_client = APIClient(**api_client_kwargs)
     yield api_client
     await api_client.close()
 

@@ -42,7 +42,7 @@ async def test_import_image(api_client, tmp_image, random_name):
 async def test_images(api_client, tmp_image):
     images = await api_client.images(all=True)
     res = [x for x in images if x['Id'].startswith(tmp_image)]
-    assert len(res) >= 1
+    assert len(res) == 1
 
 
 @pytest.mark.asyncio

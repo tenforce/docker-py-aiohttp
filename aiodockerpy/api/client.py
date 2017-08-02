@@ -45,7 +45,7 @@ class APIClient(requests2aiohttp.sessions.Session, docker.api.APIClient):
                         limit=num_pools, loop=loop, ssl_context=ssl_context)
 
         super().__init__(tls=tls, num_pools=num_pools,
-                         connector=connector, **kwargs)
+                         aio_connector=connector, aio_loop=loop, **kwargs)
 
     def _render_param(self, param):
         if isinstance(param, bool):
