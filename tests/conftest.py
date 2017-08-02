@@ -1,8 +1,18 @@
 import uuid
 from aiodockerpy import APIClient
 from aiodockerpy.errors import ImageNotFound
+from docker.utils import kwargs_from_env
+from os import environ as ENV
 
 import pytest
+
+
+_api_versions = {
+    "17.06": "1.30",
+    "17.05": "1.29",
+    "17.04": "1.28",
+    "17.03": "1.27",
+}
 
 
 def _random_name():
@@ -16,7 +26,9 @@ def random_name():
 
 @pytest.yield_fixture
 async def api_client():
-    api_client = APIClient()
+    kwargs = kwargs_from_env()
+    kwargs['version'] = _api_versions.get(ENV.get("DOCKER_VERSION"))
+    api_client = APIClient(**kwargs)
     yield api_client
     await api_client.close()
 
@@ -25,7 +37,7 @@ async def api_client():
 async def tmp_container(api_client):
     await api_client.pull("busybox:latest")
     container = await api_client.create_container("busybox:latest",
-                                              ["touch", "/test"])
+                                                  ["touch", "/test"])
     await api_client.start(container)
     yield container['Id']
     await api_client.remove_container(container, v=True, force=True)
