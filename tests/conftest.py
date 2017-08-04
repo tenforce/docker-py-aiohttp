@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 from aiodockerpy import APIClient
 from aiodockerpy.errors import ImageNotFound
@@ -24,6 +25,22 @@ def random_name():
     yield _random_name
 
 
+@pytest.yield_fixture(scope="session")
+def base_images():
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(_pull_base_images())
+    yield
+
+
+async def _pull_base_images():
+    kwargs = kwargs_from_env()
+    api_client = APIClient(**kwargs)
+    try:
+        await api_client.pull("busybox:latest")
+    finally:
+        await api_client.close()
+
+
 @pytest.yield_fixture
 async def api_client():
     kwargs = kwargs_from_env()
@@ -34,8 +51,7 @@ async def api_client():
 
 
 @pytest.yield_fixture
-async def tmp_container(api_client):
-    await api_client.pull("busybox:latest")
+async def tmp_container(api_client, base_images):
     container = await api_client.create_container("busybox:latest",
                                                   ["touch", "/test"])
     await api_client.start(container)
