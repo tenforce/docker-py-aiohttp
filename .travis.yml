@@ -15,11 +15,11 @@ env:
   - DOCKER_VERSION=17.06
 
 install:
-  - docker run -d --privileged --net host --name ci-docker docker:$DOCKER_VERSION-dind
+  - docker run -d --privileged --net host --name ci-docker docker:$DOCKER_VERSION-dind dockerd -H tcp://localhost:27015
   - pip install tox codecov
 
 script:
-  - DOCKER_HOST=tcp://localhost:2375 tox
+  - DOCKER_HOST=tcp://localhost:27015 tox
 
 after_success:
   - codecov
