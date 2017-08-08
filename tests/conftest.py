@@ -47,14 +47,15 @@ def api_client_kwargs():
     kwargs['version'] = _api_versions.get(ENV.get("DOCKER_VERSION"))
     kwargs['timeout'] = 5
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(_ensure_api_version(kwargs))
+    if "DOCKER_VERSION" in ENV:
+        loop.run_until_complete(_ensure_api_version(kwargs))
     yield kwargs
 
 
 async def _ensure_api_version(kwargs):
     api_client = APIClient(**kwargs)
     try:
-        resp = await api_client.version()
+        resp = await api_client.version(api_version=False)
         assert resp["ApiVersion"] == api_client.api_version
     finally:
         await api_client.close()
