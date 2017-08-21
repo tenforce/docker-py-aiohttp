@@ -78,6 +78,15 @@ async def tmp_container(api_client, base_images):
 
 
 @pytest.yield_fixture
+async def tmp_running_container(api_client, base_images):
+    container = await api_client.create_container(
+        "busybox:latest", ["sh", "-c", "while : ;do sleep 1;echo ok;done"])
+    await api_client.start(container)
+    yield container['Id']
+    await api_client.remove_container(container, v=True, force=True)
+
+
+@pytest.yield_fixture
 async def tmp_image(api_client, tmp_container):
     image = await api_client.commit(tmp_container)
     yield image['Id']

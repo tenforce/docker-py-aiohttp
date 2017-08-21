@@ -67,6 +67,8 @@ class APIClient(requests2aiohttp.sessions.Session, docker.api.APIClient):
             }
 
     def request(self, method, url, params=None, stream=None, **kwargs):
+        if stream:
+            kwargs['timeout'] = None
         return super().request(method, url, params=self._clean_params(params),
                                **kwargs)
 

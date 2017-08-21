@@ -75,3 +75,11 @@ async def test_tag(api_client, tmp_image, random_name):
     assert res is True
     images = await api_client.images(repository)
     assert len(images) >= 1
+
+
+@pytest.mark.asyncio
+async def test_log_container_timeout(api_client, tmp_running_container):
+    logs = api_client.logs(tmp_running_container, stream=True)
+    for i in range(api_client.timeout + 1):
+        line = await logs.__anext__()
+        assert line == b"ok\n"
