@@ -176,8 +176,8 @@ def _override_method_return_coroutine(method):
 
 
 for method in [
-            'load_image', 'remove_image', 'remove_container', 'start',
-            'remove_network', 'connect_container_to_network',
+            'remove_container', 'start', 'remove_network',
+            'connect_container_to_network',
             'disconnect_container_from_network',
         ]:
     setattr(APIClient, method, _override_method_return_coroutine(method))

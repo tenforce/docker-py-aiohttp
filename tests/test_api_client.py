@@ -62,7 +62,8 @@ async def test_load_image(api_client, tmp_image):
     images = await api_client.images(all=True)
     res = [x for x in images if x['Id'].startswith(tmp_image)]
     assert len(res) == 0
-    await api_client.load_image(image_bin)
+    async for _ in api_client.load_image(image_bin):
+        pass
     images = await api_client.images(all=True)
     res = [x for x in images if x['Id'].startswith(tmp_image)]
     assert len(res) == 1
