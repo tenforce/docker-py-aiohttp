@@ -45,6 +45,7 @@ async def _pull_base_images():
 def api_client_kwargs():
     kwargs = kwargs_from_env()
     kwargs['version'] = _api_versions.get(ENV.get("DOCKER_VERSION"))
+    kwargs['timeout'] = 5
     loop = asyncio.get_event_loop()
     loop.run_until_complete(_ensure_api_version(kwargs))
     yield kwargs
